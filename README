@@ -1,0 +1,18 @@
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+This folder contains:
+ - slurm_job_startup           -> script for launching a SLURM environment in a SLURM job
+ - slurm_job_shutdown          -> script for shutting down the SLURM environment
+ - python-hostlist-1.18.tar.gz -> python utility to extract node names from hostlists: 
+				  decompress in the same folder
+ - slurm.conf.template         -> slurm.conf template used by "slurm_job" script to generate a slurm.conf 
+ - trace.sh.template           -> template script used by "slurm_job" script for SLURM jobcomp/script plugin
+ - example.job                 -> an example of use
+
+To run the SLURM environment:
+ - install SLURM in "slurm" directory
+ - extract python-hostlist-1.18.tar.gz in the main directory
+ - edit hardware info of the computing nodes and SLURM parameters in slurm.conf.template
+ - modify example.job to request the needed number of nodes, and to run your workload
+ - use sbatch to submit the job

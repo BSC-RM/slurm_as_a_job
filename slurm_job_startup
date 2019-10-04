@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+#pwd is the main folder
+SLURM_USER_PATH="$(pwd)"
+SLURM_HOME="$SLURM_USER_PATH/slurm"
+SLURM_CONF="$SLURM_USER_PATH/etc/slurm.conf"
+
+# create necessary folders
+mkdir -p $SLURM_USER_PATH/etc \
+         $SLURM_USER_PATH/var/state \
+         $SLURM_USER_PATH/var/run \
+         $SLURM_USER_PATH/var/spool \
+	 $SLURM_USER_PATH/OUTPUTS \
+	 $SLURM_USER_PATH/scripts
+
+# get controller node name and daemons nodes names
+hostlist_cmd="python $SLURM_USER_PATH/python-hostlist-1.18/hostlist"
+control_host="$($hostlist_cmd --limit=1 $SLURM_NODELIST)"
+slave_hosts="$($hostlist_cmd --offset=1 $SLURM_NODELIST)"
+slave_nnodes="$($hostlist_cmd --count --offset=1 $SLURM_NODELIST)"
+
+# create slurm.conf and trace.sh from the template
+slurm_conf_template="$SLURM_USER_PATH/slurm.conf.template"
+slurm_script_template="$SLURM_USER_PATH/trace.sh.template"
+sed -e s/{ID_JOB}/$SLURM_JOBID/ \
+    -e s:{DIR_WORK}:$SLURM_USER_PATH: $slurm_script_template > $SLURM_USER_PATH/scripts/trace.sh;
+
+sed -e s:TOKEN_SLURM_USER_PATH:$SLURM_USER_PATH: \
+    -e s:TOKEN_CONTROL_MACHINE:$control_host: \
+    -e s:TOKEN_NODELIST:$slave_hosts: \
+    -e s:TOKEN_USERNAME:$USER: \
+    $slurm_conf_template > $SLURM_CONF
+
+#generate keys for communication between SLURM deamons
+openssl genrsa -out $SLURM_USER_PATH/etc/slurm.key 1024
+openssl rsa -in $SLURM_USER_PATH/etc/slurm.key -pubout -out $SLURM_USER_PATH/etc/slurm.cert
+
+
+echo "starting slurmctld"
+SLURM_CONF=$SLURM_CONF $SLURM_HOME/sbin/slurmctld -D &
+echo "starting slurmds"
+srun --cpu-bind=none --cpus-per-task=48 -n $slave_nnodes -N $slave_nnodes -w $slave_hosts $SLURM_HOME/sbin/slurmd -D -f $SLURM_USER_PATH/etc/slurm.conf &
+sleep 10
+
+export PATH="$SLURM_HOME/bin:$PATH"
+
+id=$SLURM_JOBID
+#unset system SLURM variables to avoid conflicts
+unset $(/usr/bin/env | egrep '^(SLURM_\w*)=(.*)$' | /usr/bin/cut -d= -f1)
+
+export SLURM_CONF=$SLURM_CONF
+
+#######################################
+# Launch your workload here, or login #
+# into nodes and do it interactively! #
+#######################################
+
+echo "waiting for workload to finish"
+aux=1;
+while [ $aux -ge 1 ];do
+  aux=`squeue -l -h 2>/dev/null | wc -l`;
+  echo $aux;
+  sleep 10;
+done
+
+#moving jobs output files to JOBS_OUTPUT
+mkdir $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
+mv slurm-*.out $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
+
+$SLURM_HOME/bin/scontrol shutdown
+sleep 5;

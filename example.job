@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+#SBATCH -J slurm_into_slurm
+#SBATCH -o OUTPUTS/test_%j.out
+#SBATCH -e OUTPUTS/test_%j.err
+#SBATCH --nodes=50
+#SBATCH --exclusive
+#SBATCH -t 48:00:00
+
+
+source slurm_job_startup
+
+#############################
+# Launch your workload here #
+#     using sbatch/srun     #
+#############################
+
+source slurm_job_shutdown

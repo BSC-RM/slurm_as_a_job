@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+echo "waiting for workload to finish"
+while [[ $(squeue -h 2> /dev/null | wc -l) > 0 ]] ; do
+  sleep 10
+done
+scontrol shutdown
+sleep 10
