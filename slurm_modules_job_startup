@@ -14,7 +14,9 @@ mkdir -p $SLURM_USER_PATH/etc \
          $SLURM_USER_PATH/var/run \
          $SLURM_USER_PATH/var/spool \
 	 $SLURM_USER_PATH/OUTPUTS \
-	 $SLURM_USER_PATH/scripts
+	 $SLURM_USER_PATH/scripts \
+	 $SLURM_USER_PATH/TRACES \
+	 $SLURM_USER_PATH/JOBS_OUTPUT
 
 # get controller node name and daemons nodes names
 hostlist_cmd="python $SLURM_USER_PATH/python-hostlist-1.18/hostlist"
