@@ -1,0 +1,25 @@
+#!/bin/bash -xe
+
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+#SBATCH -J slurm_into_slurm
+#SBATCH -o OUTPUTS/test_%j.out
+#SBATCH -e OUTPUTS/test_%j.err
+#SBATCH --nodes=3 --partition=dp-cn
+#SBATCH packjob
+#SBATCH --nodes=2 --partition=dp-dam
+#SBATCH -t 00:02:00
+
+
+source slurm_modules_job_startup
+
+#############################
+# Launch your workload here #
+#     using sbatch/srun     #
+#############################
+export PMI_DEBUG=1
+
+srun -n 2 -N 2 --partition=dp-dam hostname
+
+source slurm_job_shutdown

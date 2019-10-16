@@ -1,0 +1,77 @@
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+# See the slurm.conf man page for more information.
+
+ControlMachine=TOKEN_CONTROL_MACHINE
+#ControlAddr=
+AuthType=auth/none
+CryptoType=crypto/openssl
+JobCredentialPrivateKey=TOKEN_SLURM_USER_PATH/etc/slurm.key
+JobCredentialPublicCertificate=TOKEN_SLURM_USER_PATH/etc/slurm.cert
+#MailProg=/bin/mail
+MpiDefault=pspmi
+#MpiDefault=pmi2
+#MpiParams=ports=#-#
+ProctrackType=proctrack/linuxproc
+ReturnToService=1
+
+SlurmctldPidFile=TOKEN_SLURM_USER_PATH/var/run/slurmctld.pid
+SlurmctldPort=8001
+SlurmdPidFile=TOKEN_SLURM_USER_PATH/var/run/slurmd.%n.pid
+SlurmdPort=8009
+SlurmdSpoolDir=TOKEN_SLURM_USER_PATH/var/spool/slurmd.%n
+SlurmUser=TOKEN_USERNAME
+SlurmdUser=TOKEN_USERNAME
+StateSaveLocation=TOKEN_SLURM_USER_PATH/var/state
+SwitchType=switch/none
+TaskPlugin=task/affinity
+TaskPluginParam=autobind=cores
+#
+#
+# TIMERS
+InactiveLimit=0
+KillWait=30
+MinJobAge=300
+OverTimeLimit=500
+SlurmctldTimeout=300
+SlurmdTimeout=300
+#
+#
+# SCHEDULING
+FastSchedule=1
+SchedulerType=sched/backfill
+SelectType=select/linear
+SchedulerParameters=bf_interval=10
+SelectTypeParameters=CR_Memory
+#SelectTypeParameters=
+#
+#
+# LOGGING AND ACCOUNTING
+AccountingStorageType=accounting_storage/filetxt
+AccountingStorageLoc=TOKEN_SLURM_USER_PATH/var/job_accounting
+
+JobCompType=jobcomp/script
+JobCompLoc=TOKEN_SLURM_USER_PATH/scripts/trace.sh
+
+JobAcctGatherFrequency=30
+JobAcctGatherType=jobacct_gather/none
+
+SlurmctldDebug=7
+SlurmctldLogFile=TOKEN_SLURM_USER_PATH/var/slurmctld.log
+SlurmdDebug=7
+SlurmdLogFile=TOKEN_SLURM_USER_PATH/var/slurmd.%n.log
+DebugFlags=Steps,SelectType,Backfill
+
+ClusterName=cluster
+
+#
+#
+# COMPUTE NODES
+#NodeName=TOKEN_NODELIST CPUs=48 Sockets=2 CoresPerSocket=24 ThreadsPerCore=1 RealMemory=95200 State=IDLE Port=7009
+NodeName=TOKEN_NODELIST_P1 CPUs=48 RealMemory=191000 Sockets=2 CoresPerSocket=12 ThreadsPerCore=2 State=UNKNOWN State=IDLE Port=7009 Feature=dp-cn Gres=cluster:dp-cn:no_consume:1
+NodeName=TOKEN_NODELIST_P2 CPUs=96 RealMemory=192000 Sockets=2 CoresPerSocket=48 ThreadsPerCore=4 State=UNKNOWN State=IDLE Port=7010 Feature=dp-dam Gres=dp-dam:dp-dam:no_consume:1
+
+#PartitionName=debug Nodes=TOKEN_NODELIST Default=YES MaxTime=INFINITE State=UP
+PartitionName=dp-cn Nodes=TOKEN_NODELIST_P1 Default=YES MaxTime=INFINITE State=UP
+PartitionName=dp-dam Nodes=TOKEN_NODELIST_P2 Default=NO MaxTime=INFINITE State=UP

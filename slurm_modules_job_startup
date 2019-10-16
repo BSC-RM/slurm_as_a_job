@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Copyright (C) 2018
+# Author: Marco D'Amico (marco.damico@bsc.es)
+
+#pwd is the main folder
+SLURM_USER_PATH="$(pwd)"
+SLURM_HOME="$SLURM_USER_PATH/slurm_ps"
+SLURM_CONF="$SLURM_USER_PATH/etc/slurm.conf"
+
+# create necessary folders
+mkdir -p $SLURM_USER_PATH/etc \
+         $SLURM_USER_PATH/var/state \
+         $SLURM_USER_PATH/var/run \
+         $SLURM_USER_PATH/var/spool \
+	 $SLURM_USER_PATH/OUTPUTS \
+	 $SLURM_USER_PATH/scripts
+
+# get controller node name and daemons nodes names
+hostlist_cmd="python $SLURM_USER_PATH/python-hostlist-1.18/hostlist"
+control_host="$($hostlist_cmd --limit=1 $SLURM_JOB_NODELIST_PACK_GROUP_0)"
+slave_hosts_p1="$($hostlist_cmd --offset=1 $SLURM_JOB_NODELIST_PACK_GROUP_0)"
+slave_nnodes_p1="$($hostlist_cmd --count --offset=1 $SLURM_JOB_NODELIST_PACK_GROUP_0)"
+slave_hosts_p2=$SLURM_JOB_NODELIST_PACK_GROUP_1
+slave_nnodes_p2="$($hostlist_cmd --count $SLURM_JOB_NODELIST_PACK_GROUP_1)"
+
+# create slurm.conf and trace.sh from the template
+slurm_conf_template="$SLURM_USER_PATH/slurm_modules.conf.template"
+slurm_script_template="$SLURM_USER_PATH/trace.sh.template"
+sed -e s/{ID_JOB}/$SLURM_JOBID/ \
+    -e s:{DIR_WORK}:$SLURM_USER_PATH: $slurm_script_template > $SLURM_USER_PATH/scripts/trace.sh;
+
+chmod +x $SLURM_USER_PATH/scripts/trace.sh
+
+sed -e s:TOKEN_SLURM_USER_PATH:$SLURM_USER_PATH: \
+    -e s:TOKEN_CONTROL_MACHINE:$control_host: \
+    -e s:TOKEN_NODELIST_P1:$slave_hosts_p1: \
+    -e s:TOKEN_NODELIST_P2:$slave_hosts_p2: \
+    -e s:TOKEN_USERNAME:$USER: \
+    $slurm_conf_template > $SLURM_CONF
+cp $SLURM_CONF $SLURM_HOME/etc/slurm.conf
+
+#generate keys for communication between SLURM deamons
+openssl genrsa -out $SLURM_USER_PATH/etc/slurm.key 1024
+openssl rsa -in $SLURM_USER_PATH/etc/slurm.key -pubout -out $SLURM_USER_PATH/etc/slurm.cert
+
+
+echo "starting slurmctld"
+srun --partition=dp-cn --cpu-bind=none -n 1 -N 1 -w $control_host $SLURM_HOME/sbin/slurmctld -D -f $SLURM_USER_PATH/etc/slurm.conf &
+echo "starting slurmds"
+srun --partition=dp-cn -n $slave_nnodes_p1 -N $slave_nnodes_p1 -w $slave_hosts_p1 : --partition=dp-dam -n $slave_nnodes_p2 -N $slave_nnodes_p2 -w $slave_hosts_p2 $SLURM_HOME/sbin/slurmd -D -f $SLURM_USER_PATH/etc/slurm.conf &
+sleep 10
+
+export PATH="$SLURM_HOME/bin:$PATH"
+
+id=$SLURM_JOBID
+#unset system SLURM variables to avoid conflicts
+unset $(/usr/bin/env | egrep '^(SLURM_\w*)=(.*)$' | /usr/bin/cut -d= -f1)
+
+export SLURM_CONF=$SLURM_CONF
