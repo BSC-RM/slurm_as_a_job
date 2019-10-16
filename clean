@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm -rf workload*
+rm -rf slurmctld.log
+rm -f slurm-*
+rm -rf var
+rm slurm_workload_trace.prv

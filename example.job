@@ -6,9 +6,10 @@
 #SBATCH -J slurm_into_slurm
 #SBATCH -o OUTPUTS/test_%j.out
 #SBATCH -e OUTPUTS/test_%j.err
-#SBATCH --nodes=50
+#SBATCH --nodes=4
+#SBATCH --partition=dp-cn
 #SBATCH --exclusive
-#SBATCH -t 48:00:00
+#SBATCH -t 00:02:00
 
 
 source slurm_job_startup
@@ -17,5 +18,8 @@ source slurm_job_startup
 # Launch your workload here #
 #     using sbatch/srun     #
 #############################
+export PMI_DEBUG=1
+
+srun -n 3 -N 3 hostname
 
 source slurm_job_shutdown

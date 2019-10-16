@@ -28,6 +28,8 @@ slurm_script_template="$SLURM_USER_PATH/trace.sh.template"
 sed -e s/{ID_JOB}/$SLURM_JOBID/ \
     -e s:{DIR_WORK}:$SLURM_USER_PATH: $slurm_script_template > $SLURM_USER_PATH/scripts/trace.sh;
 
+chmod +x $SLURM_USER_PATH/scripts/trace.sh
+
 sed -e s:TOKEN_SLURM_USER_PATH:$SLURM_USER_PATH: \
     -e s:TOKEN_CONTROL_MACHINE:$control_host: \
     -e s:TOKEN_NODELIST:$slave_hosts: \
@@ -42,7 +44,7 @@ openssl rsa -in $SLURM_USER_PATH/etc/slurm.key -pubout -out $SLURM_USER_PATH/etc
 echo "starting slurmctld"
 SLURM_CONF=$SLURM_CONF $SLURM_HOME/sbin/slurmctld -D &
 echo "starting slurmds"
-srun --cpu-bind=none --cpus-per-task=48 -n $slave_nnodes -N $slave_nnodes -w $slave_hosts $SLURM_HOME/sbin/slurmd -D -f $SLURM_USER_PATH/etc/slurm.conf &
+srun --cpu-bind=none -n $slave_nnodes -N $slave_nnodes -w $slave_hosts $SLURM_HOME/sbin/slurmd -D -f $SLURM_USER_PATH/etc/slurm.conf &
 sleep 10
 
 export PATH="$SLURM_HOME/bin:$PATH"
@@ -52,23 +54,3 @@ id=$SLURM_JOBID
 unset $(/usr/bin/env | egrep '^(SLURM_\w*)=(.*)$' | /usr/bin/cut -d= -f1)
 
 export SLURM_CONF=$SLURM_CONF
-
-#######################################
-# Launch your workload here, or login #
-# into nodes and do it interactively! #
-#######################################
-
-echo "waiting for workload to finish"
-aux=1;
-while [ $aux -ge 1 ];do
-  aux=`squeue -l -h 2>/dev/null | wc -l`;
-  echo $aux;
-  sleep 10;
-done
-
-#moving jobs output files to JOBS_OUTPUT
-mkdir $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
-mv slurm-*.out $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
-
-$SLURM_HOME/bin/scontrol shutdown
-sleep 5;

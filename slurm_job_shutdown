@@ -7,5 +7,11 @@ echo "waiting for workload to finish"
 while [[ $(squeue -h 2> /dev/null | wc -l) > 0 ]] ; do
   sleep 10
 done
-scontrol shutdown
-sleep 10
+
+#moving jobs output files to JOBS_OUTPUT
+mkdir $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
+mv slurm-*.out $SLURM_USER_PATH/JOBS_OUTPUT/OUTS.$id
+
+echo "Shutting down Slurm"
+$SLURM_HOME/bin/scontrol shutdown
+sleep 5;
