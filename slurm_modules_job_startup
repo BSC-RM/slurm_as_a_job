@@ -13,7 +13,6 @@ mkdir -p $SLURM_USER_PATH/etc \
          $SLURM_USER_PATH/var/state \
          $SLURM_USER_PATH/var/run \
          $SLURM_USER_PATH/var/spool \
-	 $SLURM_USER_PATH/OUTPUTS \
 	 $SLURM_USER_PATH/scripts \
 	 $SLURM_USER_PATH/TRACES \
 	 $SLURM_USER_PATH/JOBS_OUTPUT
