@@ -5,21 +5,23 @@
 
 ControlMachine=TOKEN_CONTROL_MACHINE
 #ControlAddr=
-AuthType=auth/none
-CryptoType=crypto/openssl
+#AuthType=auth/none
+CredType=cred/none
 JobCredentialPrivateKey=TOKEN_SLURM_USER_PATH/etc/slurm.key
 JobCredentialPublicCertificate=TOKEN_SLURM_USER_PATH/etc/slurm.cert
 #MailProg=/bin/mail
-MpiDefault=pspmi
+MpiDefault=none
 #MpiDefault=pmi2
 #MpiParams=ports=#-#
 ProctrackType=proctrack/linuxproc
 ReturnToService=1
 
 SlurmctldPidFile=TOKEN_SLURM_USER_PATH/var/run/slurmctld.pid
-SlurmctldPort=8001
+#SlurmctldPort=8001
+SlurmctldPort=6817
 SlurmdPidFile=TOKEN_SLURM_USER_PATH/var/run/slurmd.%n.pid
-SlurmdPort=8009
+SlurmdPort=6818
+#SlurmdPort=8009
 SlurmdSpoolDir=TOKEN_SLURM_USER_PATH/var/spool/slurmd.%n
 SlurmUser=TOKEN_USERNAME
 SlurmdUser=TOKEN_USERNAME
@@ -38,12 +40,14 @@ SlurmctldTimeout=300
 SlurmdTimeout=300
 #
 #
+PriorityType=priority/multifactor
+PriorityWeightPartition=1000
 # SCHEDULING
 FastSchedule=1
 SchedulerType=sched/backfill
 SelectType=select/linear
-SchedulerParameters=bf_interval=10
-SelectTypeParameters=CR_Memory
+SchedulerParameters=bf_interval=10 #,enable_hetero_steps
+#SelectTypeParameters=CR_Memory
 #SelectTypeParameters=
 #
 #
@@ -61,7 +65,7 @@ SlurmctldDebug=7
 SlurmctldLogFile=TOKEN_SLURM_USER_PATH/var/slurmctld.log
 SlurmdDebug=7
 SlurmdLogFile=TOKEN_SLURM_USER_PATH/var/slurmd.%n.log
-DebugFlags=Steps,SelectType,Backfill
+DebugFlags=Steps,SelectType,Backfill,Priority
 
 ClusterName=cluster
 
@@ -69,9 +73,13 @@ ClusterName=cluster
 #
 # COMPUTE NODES
 #NodeName=TOKEN_NODELIST CPUs=48 Sockets=2 CoresPerSocket=24 ThreadsPerCore=1 RealMemory=95200 State=IDLE Port=7009
-NodeName=TOKEN_NODELIST_P1 CPUs=48 RealMemory=191000 Sockets=2 CoresPerSocket=12 ThreadsPerCore=2 State=UNKNOWN State=IDLE Port=7009 Feature=dp-cn Gres=cluster:dp-cn:no_consume:1
-NodeName=TOKEN_NODELIST_P2 CPUs=96 RealMemory=192000 Sockets=2 CoresPerSocket=48 ThreadsPerCore=4 State=UNKNOWN State=IDLE Port=7010 Feature=dp-dam Gres=dp-dam:dp-dam:no_consume:1
+NodeName=TOKEN_NODELIST_P1 CPUs=48 RealMemory=191000 Sockets=2 CoresPerSocket=12 ThreadsPerCore=2 State=IDLE Port=7009 Feature=dp-cn Gres=cluster:dp-cn:no_consume:1
+#NodeName=TOKEN_NODELIST_P2 CPUs=96 RealMemory=192000 Sockets=2 CoresPerSocket=48 ThreadsPerCore=4 State=UNKNOWN State=IDLE Port=7010 Feature=dp-dam Gres=dp-dam:dp-dam:no_consume:1
+NodeName=TOKEN_NODELIST_P2 CPUs=16 RealMemory=46759 Sockets=2 CoresPerSocket=4 ThreadsPerCore=2 State=IDLE Port=7009 Feature=dp-esb Gres=booster:no_consume:1,gpu:1
 
 #PartitionName=debug Nodes=TOKEN_NODELIST Default=YES MaxTime=INFINITE State=UP
-PartitionName=dp-cn Nodes=TOKEN_NODELIST_P1 Default=YES MaxTime=INFINITE State=UP
-PartitionName=dp-dam Nodes=TOKEN_NODELIST_P2 Default=NO MaxTime=INFINITE State=UP
+#PartitionName=dp-cn Nodes=TOKEN_NODELIST_P1 Default=YES MaxTime=INFINITE State=UP PriorityJobFactor=8 PriorityTier=8
+#PartitionName=dp-dam Nodes=TOKEN_NODELIST_P2 Default=NO MaxTime=INFINITE State=UP PriorityJobFactor=2 PriorityTier=2
+PartitionName=dp-cn Nodes=TOKEN_NODELIST_P1 Default=YES DefaultTime=240 MaxTime=1200 State=Up
+#PartitionName=dp-dam Nodes= DefaultTime=240 MaxTime=1200 MaxNodes=16 State=Up
+PartitionName=dp-dam Nodes=TOKEN_NODELIST_P2 DefaultTime=240 MaxTime=1200 State=Up
